@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoReceipt AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #3d6b35; --sage-mid: #5a8f50; --sage-light: #8fbc82;
+    --sage-pale: #dceeda; --cream: #f7f3ec; --warm: #faf8f4;
+    --charcoal: #1e2420; --muted: #6b7068; --accent: #c47a3a;
+    --red: #c04a30; --amber: #d4882a; --green: #2d7a3a; --border: #e4ddd0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--warm); color:var(--charcoal); min-height:100vh; }
+
+  nav {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 48px; background:var(--warm); border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:100;
+  }
+  .logo { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--sage); }
+  .logo span { color:var(--accent); font-style:italic; }
+  .nav-links { display:flex; gap:28px; list-style:none; }
+  .nav-links a { text-decoration:none; color:var(--muted); font-size:14px; font-weight:500; transition:color .2s; cursor:pointer; }
+  .nav-links a:hover, .nav-links a.active { color:var(--sage); }
+  .nav-btn { background:var(--sage); color:white; border:none; padding:10px 22px; border-radius:24px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; }
+  .nav-btn:hover { background:var(--charcoal); }
+
+  .page { display:none; }
+  .page.active { display:block; animation:fadeUp .4s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  /* LANDING */
+  .hero { display:grid; grid-template-columns:1fr 1fr; min-height:calc(100vh - 61px); }
+  .hero-left { padding:80px 64px; display:flex; flex-direction:column; justify-content:center; }
+  .pill { display:inline-flex; align-items:center; gap:8px; background:var(--sage-pale); color:var(--sage); font-size:12px; font-weight:600; padding:7px 16px; border-radius:24px; width:fit-content; margin-bottom:32px; }
+  .pill::before { content:''; width:7px; height:7px; background:var(--sage-light); border-radius:50%; animation:blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .hero-left h1 { font-family:'Playfair Display',serif; font-size:56px; line-height:1.08; font-weight:900; margin-bottom:24px; }
+  .hero-left h1 em { color:var(--sage); font-style:italic; }
+  .hero-left p { font-size:16px; color:var(--muted); line-height:1.75; max-width:400px; margin-bottom:40px; }
+  .hero-btns { display:flex; gap:14px; }
+  .btn-primary { background:var(--sage); color:white; border:none; padding:15px 32px; border-radius:32px; font-size:15px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .25s; }
+  .btn-primary:hover { background:var(--charcoal); transform:translateY(-2px); }
+  .btn-ghost { background:transparent; color:var(--charcoal); border:1.5px solid var(--border); padding:15px 32px; border-radius:32px; font-size:15px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; }
+  .btn-ghost:hover { border-color:var(--sage); color:var(--sage); }
+  .hero-stats { display:flex; gap:40px; margin-top:56px; padding-top:40px; border-top:1px solid var(--border); }
+  .stat-n { font-family:'Playfair Display',serif; font-size:34px; font-weight:700; color:var(--sage); }
+  .stat-l { font-size:12px; color:var(--muted); margin-top:2px; }
+  .hero-right { background:var(--cream); display:flex; align-items:center; justify-content:center; padding:60px; position:relative; overflow:hidden; }
+  .hero-right::before { content:''; position:absolute; width:500px; height:500px; background:radial-gradient(circle, rgba(143,188,130,.2) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); }
+  .upload-circle { width:200px; height:200px; border-radius:50%; background:white; box-shadow:0 24px 64px rgba(0,0,0,.1); display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0 auto 24px; cursor:pointer; transition:all .3s; border:2px dashed var(--sage-pale); position:relative; z-index:1; }
+  .upload-circle:hover { transform:scale(1.05); border-color:var(--sage-light); }
+  .upload-circle .icon { font-size:52px; margin-bottom:8px; }
+  .upload-circle p { font-size:12px; color:var(--muted); font-weight:500; }
+  .tags-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; position:relative; z-index:1; }
+  .ftag { background:white; border-radius:12px; padding:10px 14px; box-shadow:0 6px 20px rgba(0,0,0,.07); font-size:13px; font-weight:500; animation:float 3s ease-in-out infinite; }
+  .ftag:nth-child(2){animation-delay:.5s} .ftag:nth-child(3){animation-delay:1s}
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .steps-section { background:var(--charcoal); padding:96px 80px; color:white; }
+  .eyebrow { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--sage-light); margin-bottom:16px; }
+  .steps-section h2 { font-family:'Playfair Display',serif; font-size:42px; font-weight:700; margin-bottom:64px; max-width:480px; line-height:1.2; }
+  .steps-row { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .step { border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:28px; background:rgba(255,255,255,.03); transition:.2s; }
+  .step:hover { background:rgba(255,255,255,.07); }
+  .step-n { font-family:'Playfair Display',serif; font-size:44px; font-weight:700; color:rgba(255,255,255,.08); line-height:1; margin-bottom:14px; }
+  .step-icon { font-size:26px; margin-bottom:10px; }
+  .step h3 { font-size:15px; font-weight:600; margin-bottom:6px; }
+  .step p { font-size:13px; color:rgba(255,255,255,.5); line-height:1.6; }
+
+  /* UPLOAD */
+  .upload-page { max-width:720px; margin:0 auto; padding:64px 40px; }
+  .upload-page h2 { font-family:'Playfair Display',serif; font-size:38px; margin-bottom:6px; }
+  .upload-page > p { color:var(--muted); margin-bottom:48px; font-size:15px; }
+  .drop-zone { border:2px dashed var(--sage-pale); border-radius:20px; padding:64px 40px; text-align:center; background:var(--cream); cursor:pointer; transition:all .3s; }
+  .drop-zone:hover, .drop-zone.drag { border-color:var(--sage); background:#eef6ec; transform:scale(1.01); }
+  .drop-zone input { display:none; }
+  .drop-icon { font-size:52px; margin-bottom:16px; }
+  .drop-zone h3 { font-size:18px; font-weight:600; margin-bottom:8px; }
+  .drop-zone p { color:var(--muted); font-size:14px; }
+  .browse { color:var(--sage); font-weight:600; text-decoration:underline; }
+  .preview-box { display:none; margin-top:24px; background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; }
+  .preview-box.show { display:block; }
+  .preview-box img { width:100%; max-height:320px; object-fit:contain; background:#f5f5f5; }
+  .preview-footer { padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); }
+  .preview-name { font-size:14px; font-weight:500; }
+  .preview-size { font-size:12px; color:var(--muted); }
+  .scan-btn { width:100%; background:var(--sage); color:white; border:none; padding:18px; border-radius:14px; font-size:16px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:20px; transition:all .25s; display:none; }
+  .scan-btn.show { display:block; }
+  .scan-btn:hover { background:var(--charcoal); transform:translateY(-2px); }
+  .scan-btn:disabled { background:var(--muted); cursor:not-allowed; transform:none; }
+  .btn-sm { padding:10px 20px; border-radius:24px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; border:none; }
+  .btn-sm-ghost { background:transparent; color:var(--charcoal); border:1.5px solid var(--border); }
+  .btn-sm-ghost:hover { border-color:var(--sage); color:var(--sage); }
+
+  /* PROCESSING */
+  .processing { display:none; position:fixed; inset:0; z-index:200; background:rgba(250,248,244,.97); flex-direction:column; align-items:center; justify-content:center; gap:28px; }
+  .processing.show { display:flex; }
+  .proc-ring { width:72px; height:72px; border-radius:50%; border:3px solid var(--sage-pale); border-top-color:var(--sage); animation:spin .9s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .proc-text { text-align:center; }
+  .proc-text h3 { font-family:'Playfair Display',serif; font-size:24px; margin-bottom:8px; }
+  .proc-text p { color:var(--muted); font-size:14px; }
+  .proc-steps { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .proc-step { display:flex; align-items:center; gap:10px; font-size:13px; color:rgba(0,0,0,.25); transition:color .3s; }
+  .proc-step.done { color:var(--green); }
+  .proc-step.active { color:var(--charcoal); font-weight:500; }
+  .proc-step .dot { width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+  .error-box { display:none; background:#fff5f3; border:1.5px solid #fcc; border-radius:14px; padding:20px 24px; margin-top:20px; color:var(--red); font-size:14px; line-height:1.6; }
+  .error-box.show { display:block; }
+
+  /* DASHBOARD */
+  .dashboard { padding:48px; min-height:100vh; }
+  .dash-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; }
+  .dash-header h2 { font-family:'Playfair Display',serif; font-size:30px; margin-bottom:4px; }
+  .dash-meta { font-size:13px; color:var(--muted); }
+  .dash-actions { display:flex; gap:12px; }
+  .btn-sm-primary { background:var(--sage); color:white; }
+  .btn-sm-primary:hover { background:var(--charcoal); }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:28px; }
+  .kpi { background:white; border-radius:16px; padding:22px; border:1px solid var(--border); }
+  .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .kpi-val { font-family:'Playfair Display',serif; font-size:30px; font-weight:700; line-height:1; margin-bottom:4px; }
+  .kpi-sub { font-size:12px; color:var(--muted); }
+  .kpi-red .kpi-val{color:var(--red)} .kpi-amber .kpi-val{color:var(--amber)} .kpi-green .kpi-val{color:var(--green)} .kpi-sage .kpi-val{color:var(--sage)}
+  .dash-grid { display:grid; grid-template-columns:1fr 360px; gap:22px; }
+  .panel { background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; margin-bottom:22px; }
+  .panel-head { padding:18px 22px; border-bottom:1px solid #f0ebe2; display:flex; justify-content:space-between; align-items:center; }
+  .panel-head h3 { font-size:15px; font-weight:600; }
+  .panel-head span { font-size:12px; color:var(--muted); }
+  .panel-body { padding:22px; }
+  .item-row { display:grid; grid-template-columns:1fr 120px 72px; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #f8f5f0; }
+  .item-row:last-child { border-bottom:none; }
+  .item-n { font-size:14px; font-weight:500; }
+  .item-cat { font-size:11px; color:var(--muted); margin-top:2px; }
+  .bar-bg { background:#f0ebe2; height:5px; border-radius:3px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:3px; transition:width 1.2s ease; }
+  .fill-red{background:var(--red)} .fill-amber{background:var(--amber)} .fill-green{background:var(--green)}
+  .item-co2 { font-size:13px; font-weight:600; text-align:right; }
+  .score-wrap { text-align:center; padding:16px 0; }
+  .ring-num { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; }
+  .grade-label { font-size:14px; color:var(--muted); margin-top:8px; }
+  .grade-msg { font-size:13px; font-weight:500; margin-top:4px; max-width:240px; margin-left:auto; margin-right:auto; }
+  .alt-card { background:var(--cream); border-radius:12px; padding:16px; margin-bottom:12px; }
+  .alt-card:last-child{margin-bottom:0}
+  .alt-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .alt-name { font-size:14px; font-weight:600; }
+  .alt-save { background:#e0f5e5; color:var(--green); font-size:11px; font-weight:700; padding:4px 10px; border-radius:10px; }
+  .alt-desc { font-size:13px; color:var(--muted); line-height:1.55; }
+  .badges { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+  .badge { background:var(--sage-pale); color:var(--sage); font-size:12px; font-weight:500; padding:5px 12px; border-radius:20px; }
+
+  /* HISTORY */
+  .history-page { padding:64px 80px; }
+  .history-page h2 { font-family:'Playfair Display',serif; font-size:38px; margin-bottom:6px; }
+  .history-page > p { color:var(--muted); margin-bottom:40px; }
+  .empty-state { text-align:center; padding:80px 40px; background:var(--cream); border-radius:20px; border:2px dashed var(--border); }
+  .empty-state .e-icon { font-size:56px; margin-bottom:20px; }
+  .empty-state h3 { font-family:'Playfair Display',serif; font-size:24px; margin-bottom:8px; }
+  .empty-state p { color:var(--muted); margin-bottom:24px; }
+  .hist-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .hist-card { background:white; border-radius:16px; border:1px solid var(--border); padding:22px; cursor:pointer; transition:all .2s; }
+  .hist-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,.08); }
+  .hist-date { font-size:11px; color:var(--muted); margin-bottom:10px; }
+  .hist-store { font-size:17px; font-weight:600; margin-bottom:3px; }
+  .hist-items { font-size:12px; color:var(--muted); margin-bottom:18px; }
+  .hist-footer { display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--border); }
+  .hist-co2 { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; }
+  .grade-chip { font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; }
+  .g-a{background:#e0f5e5;color:var(--green)} .g-b{background:#fef3e4;color:var(--amber)} .g-c{background:#fde8e4;color:var(--red)}
+
+  @media(max-width:900px) {
+    .hero{grid-template-columns:1fr} .hero-right{display:none}
+    .kpi-row{grid-template-columns:repeat(2,1fr)} .dash-grid{grid-template-columns:1fr}
+    .steps-row{grid-template-columns:1fr} .hist-grid{grid-template-columns:1fr}
+    nav{padding:16px 20px} .hero-left{padding:48px 24px}
+    .dashboard{padding:24px} .history-page{padding:40px 24px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Eco<span>Receipt</span></div>
+  <ul class="nav-links">
+    <li><a onclick="show('landing')" class="active" id="nav-landing">Home</a></li>
+    <li><a onclick="show('upload')" id="nav-upload">Scan Receipt</a></li>
+    <li><a onclick="show('dashboard')" id="nav-dashboard">Dashboard</a></li>
+    <li><a onclick="show('history')" id="nav-history">History</a></li>
+  </ul>
+  <button class="nav-btn" onclick="show('upload')">+ Scan Now</button>
+</nav>
+
+<div class="processing" id="proc">
+  <div class="proc-ring"></div>
+  <div class="proc-text">
+    <h3>Analyzing Receipt</h3>
+    <p>This takes about 10–15 seconds</p>
+    <div class="proc-steps">
+      <div class="proc-step" id="ps1"><div class="dot"></div> Reading image with OCR</div>
+      <div class="proc-step" id="ps2"><div class="dot"></div> Identifying products</div>
+      <div class="proc-step" id="ps3"><div class="dot"></div> Calculating carbon footprint</div>
+      <div class="proc-step" id="ps4"><div class="dot"></div> Generating eco alternatives</div>
+    </div>
+  </div>
+</div>
+
+<!-- LANDING -->
+<div class="page active" id="page-landing">
+  <section class="hero">
+    <div class="hero-left">
+      <div class="pill">AI-Powered Carbon Analysis</div>
+      <h1>Know the <em>real cost</em> of your groceries</h1>
+      <p>Upload any grocery receipt and our AI instantly calculates the carbon footprint of every item — then shows you smarter, greener alternatives.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="show('upload')">Scan My Receipt</button>
+        <button class="btn-ghost" onclick="document.querySelector('.steps-section').scrollIntoView({behavior:'smooth'})">How It Works ↓</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-n">27×</div><div class="stat-l">Beef vs lentils CO₂</div></div>
+        <div><div class="stat-n">26%</div><div class="stat-l">Food's share of emissions</div></div>
+        <div><div class="stat-n">80%</div><div class="stat-l">Savings with right swaps</div></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div>
+        <div class="upload-circle" onclick="show('upload')">
+          <div class="icon">🧾</div>
+          <p>Upload receipt</p>
+        </div>
+        <div class="tags-row">
+          <div class="ftag">🌿 Real AI analysis</div>
+          <div class="ftag">📊 Live CO₂ data</div>
+          <div class="ftag">♻️ Eco swaps</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="steps-section">
+    <div class="eyebrow">How It Works</div>
+    <h2>From photo to insights in seconds</h2>
+    <div class="steps-row">
+      <div class="step"><div class="step-n">01</div><div class="step-icon">📸</div><h3>Upload Receipt</h3><p>Capture or upload any grocery receipt photo from your device.</p></div>
+      <div class="step"><div class="step-n">02</div><div class="step-icon">🔍</div><h3>OCR Extraction</h3><p>AI reads the image and extracts every product name and quantity.</p></div>
+      <div class="step"><div class="step-n">03</div><div class="step-icon">🤖</div><h3>Product ID</h3><p>Claude AI identifies and categorizes each item from the extracted text.</p></div>
+      <div class="step"><div class="step-n">04</div><div class="step-icon">🌍</div><h3>Carbon Mapping</h3><p>Each item matched to verified emission factors (kg CO₂/kg food).</p></div>
+      <div class="step"><div class="step-n">05</div><div class="step-icon">📊</div><h3>Footprint Score</h3><p>Total CO₂ calculated and graded against a 42 kg baseline average.</p></div>
+      <div class="step"><div class="step-n">06</div><div class="step-icon">🌱</div><h3>Eco Alternatives</h3><p>Personalized swap suggestions ranked by maximum carbon savings.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- UPLOAD -->
+<div class="page" id="page-upload">
+  <div class="upload-page">
+    <h2>Scan Your Receipt</h2>
+    <p>Upload a photo of your grocery receipt — AI will analyze every item in real time.</p>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+      <div class="drop-icon">🧾</div>
+      <h3>Drop your receipt here</h3>
+      <p>or <span class="browse">browse files</span> · JPG, PNG · Max 10MB</p>
+      <input type="file" id="fileIn" accept="image/*" onchange="onFile(event)">
+    </div>
+    <div class="preview-box" id="previewBox">
+      <img id="previewImg" src="" alt="Receipt preview">
+      <div class="preview-footer">
+        <div><div class="preview-name" id="previewName"></div><div class="preview-size" id="previewSize"></div></div>
+        <button class="btn-sm btn-sm-ghost" onclick="clearFile()">Remove</button>
+      </div>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+    <button class="scan-btn" id="scanBtn" onclick="scanReceipt()">🌿 Analyze Carbon Footprint</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div class="dashboard">
+    <div class="dash-header">
+      <div><h2>Carbon Analysis</h2><div class="dash-meta" id="dashMeta">—</div></div>
+      <div class="dash-actions">
+        <button class="btn-sm btn-sm-ghost" onclick="show('history')">View History</button>
+        <button class="btn-sm btn-sm-primary" onclick="show('upload')">+ New Scan</button>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi kpi-red"><div class="kpi-label">Total CO₂</div><div class="kpi-val" id="kTotalCo2">—</div><div class="kpi-sub">This shopping trip</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-label">Eco Score</div><div class="kpi-val" id="kGrade">—</div><div class="kpi-sub" id="kGradeSub">—</div></div>
+      <div class="kpi kpi-green"><div class="kpi-label">Potential Savings</div><div class="kpi-val" id="kSavings">—</div><div class="kpi-sub">With suggested swaps</div></div>
+      <div class="kpi kpi-sage"><div class="kpi-label">Items Scanned</div><div class="kpi-val" id="kItems">—</div><div class="kpi-sub">Products identified</div></div>
+    </div>
+    <div class="dash-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h3>Item Breakdown</h3><span id="itemCount">—</span></div>
+          <div class="panel-body" id="itemList"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h3>Eco Score</h3></div>
+          <div class="panel-body">
+            <div class="score-wrap">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="58" fill="none" stroke="#f0ebe2" stroke-width="10"/>
+                <circle id="ringArc" cx="70" cy="70" r="58" fill="none" stroke="var(--amber)"
+                  stroke-width="10" stroke-dasharray="364" stroke-dashoffset="364"
+                  stroke-linecap="round" transform="rotate(-90 70 70)"
+                  style="transition:stroke-dashoffset 1.5s ease"/>
+                <text id="ringNum" x="70" y="78" text-anchor="middle" class="ring-num" fill="var(--charcoal)">—</text>
+              </svg>
+              <div class="grade-label" id="gradeLabel">—</div>
+              <div class="grade-msg" id="gradeMsg">Scan a receipt to see your score</div>
+              <div class="badges" id="badgeRow"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>🌱 Eco Alternatives</h3></div>
+          <div class="panel-body" id="altList"><p style="color:var(--muted);font-size:14px">Scan a receipt to see alternatives.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="history-page">
+    <h2>Scan History</h2>
+    <p>All your past receipt analyses — track your footprint over time.</p>
+    <div id="histContent"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+// Points to your local FastAPI proxy — change port if needed
+const API_URL = 'http://localhost:8000/api/analyze';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentFile = null, currentBase64 = null;
+let history = JSON.parse(localStorage.getItem('eco_history') || '[]');
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function show(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  if (page === 'history') renderHistory();
+  window.scrollTo(0, 0);
+}
+
+// ── File handling ─────────────────────────────────────────────────────────────
+function onFile(e) { const f = e.target.files[0]; if (f) handleFile(f); }
+
+function handleFile(file) {
+  currentFile = file;
+  document.getElementById('errorBox').classList.remove('show');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentBase64 = ev.target.result.split(',')[1];
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('previewName').textContent = file.name;
+    document.getElementById('previewSize').textContent = (file.size/1024).toFixed(0) + ' KB';
+    document.getElementById('previewBox').classList.add('show');
+    document.getElementById('scanBtn').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearFile() {
+  currentFile = null; currentBase64 = null;
+  document.getElementById('previewBox').classList.remove('show');
+  document.getElementById('scanBtn').classList.remove('show');
+  document.getElementById('fileIn').value = '';
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+// ── Processing steps ──────────────────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('ps'+i).className = 'proc-step' + (i<n?' done':i===n?' active':'');
+  }
+}
+
+// ── Main scan ─────────────────────────────────────────────────────────────────
+async function scanReceipt() {
+  if (!currentBase64) return;
+  document.getElementById('errorBox').classList.remove('show');
+  document.getElementById('proc').classList.add('show');
+  document.getElementById('scanBtn').disabled = true;
+  setStep(1);
+
+  const PROMPT = `You are EcoReceipt AI. Analyze this grocery receipt image.
+
+For each item use these emission factors (kg CO₂ per kg of food):
+Beef/Lamb: 27 | Pork: 7.6 | Chicken: 6.9 | Farmed fish: 6.0 | Wild fish: 3.0
+Cheese: 13.5 | Butter: 9.0 | Cow milk: 3.2/litre | Eggs: 4.5/dozen
+Yogurt: 2.2 | Oat milk: 0.9/litre | Almond milk: 0.7/litre | Soy milk: 0.98/litre
+Rice: 4.0 | Bread/pasta/wheat: 1.4 | Oats/cereal: 1.6 | Chocolate: 4.8
+Coffee: 2.9 | Tofu: 2.0 | Lentils/beans: 0.9 | Nuts: 2.5
+Vegetables: 0.5 | Root veg: 0.4 | Local fruit: 0.3 | Tropical fruit: 0.8
+Snacks/chips: 3.5 | Sugary drinks: 0.6/litre | Alcohol: 1.1/litre | Oil: 3.3/litre | Sugar: 1.8
+
+SCORING: score = max(0, min(100, round((1 - totalCo2/84) * 100)))
+Grades: 85+=A, 70-84=B+, 55-69=B, 40-54=C+, 25-39=C, 10-24=D, 0-9=F
+
+Return ONLY valid JSON (no markdown, no extra text):
+{
+  "store": "store name or Unknown",
+  "date": "date from receipt or today's date",
+  "items": [{"name":"","category":"","quantity_kg":0.0,"emission_factor":0.0,"co2_kg":0.0,"impact":"high|medium|low"}],
+  "total_co2": 0.0,
+  "score": 0,
+  "grade": "",
+  "grade_description": "",
+  "improvement_message": "",
+  "alternatives": [{"original":"","swap":"","saving_kg":0.0,"saving_pct":0,"reason":""}],
+  "badges": []
+}`;
+
+  try {
+    setTimeout(() => setStep(2), 2500);
+    setTimeout(() => setStep(3), 6000);
+    setTimeout(() => setStep(4), 9000);
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_b64: currentBase64,
+        media_type: currentFile.type || 'image/jpeg'
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Server error ' + res.status);
+    }
+
+    const data = await res.json();
+    // Backend returns the parsed result directly
+    const result = data;
+
+    result.scanned_at = new Date().toISOString();
+    result.id = Date.now();
+    history.unshift(result);
+    localStorage.setItem('eco_history', JSON.stringify(history.slice(0, 20)));
+
+    document.getElementById('proc').classList.remove('show');
+    document.getElementById('scanBtn').disabled = false;
+    renderDashboard(result);
+    show('dashboard');
+
+  } catch (err) {
+    document.getElementById('proc').classList.remove('show');
+    document.getElementById('scanBtn').disabled = false;
+    const eb = document.getElementById('errorBox');
+    if (err.message.includes('fetch') || err.message.includes('Failed')) {
+      eb.innerHTML = '⚠️ <strong>Cannot connect to backend.</strong> Make sure your FastAPI server is running:<br><code style="background:#fff0ee;padding:2px 6px;border-radius:4px">uvicorn main:app --reload</code>';
+    } else if (err.message.includes('JSON')) {
+      eb.textContent = '⚠️ Could not read the receipt clearly. Try a clearer photo with better lighting.';
+    } else {
+      eb.textContent = '⚠️ ' + err.message;
+    }
+    eb.classList.add('show');
+  }
+}
+
+// ── Render Dashboard ──────────────────────────────────────────────────────────
+function renderDashboard(r) {
+  document.getElementById('dashMeta').textContent =
+    (r.store||'Unknown Store') + (r.date ? ' · '+r.date : '') + ' · '+(r.items?.length||0)+' items';
+
+  document.getElementById('kTotalCo2').textContent = r.total_co2.toFixed(1)+' kg';
+  document.getElementById('kGrade').textContent = r.grade||'—';
+  document.getElementById('kGradeSub').textContent = r.grade_description||'';
+  const saved = (r.alternatives||[]).reduce((s,a)=>s+(a.saving_kg||0),0);
+  document.getElementById('kSavings').textContent = saved.toFixed(1)+' kg';
+  document.getElementById('kItems').textContent = r.items?.length||0;
+
+  const maxCo2 = Math.max(...(r.items||[]).map(i=>i.co2_kg), 1);
+  const list = document.getElementById('itemList');
+  document.getElementById('itemCount').textContent = (r.items?.length||0)+' items';
+  list.innerHTML = (r.items||[]).sort((a,b)=>b.co2_kg-a.co2_kg).map(item => {
+    const pct = Math.max(2, Math.round((item.co2_kg/maxCo2)*100));
+    const cl = item.impact==='high'?'fill-red':item.impact==='medium'?'fill-amber':'fill-green';
+    const cc = item.impact==='high'?'var(--red)':item.impact==='medium'?'var(--amber)':'var(--green)';
+    return `<div class="item-row">
+      <div><div class="item-n">${item.name}</div><div class="item-cat">${item.category} · ${item.quantity_kg}kg</div></div>
+      <div class="bar-bg"><div class="bar-fill ${cl}" style="width:${pct}%"></div></div>
+      <div class="item-co2" style="color:${cc}">${item.co2_kg.toFixed(1)} kg</div>
+    </div>`;
+  }).join('');
+
+  const score = Math.max(0,Math.min(100,r.score||0));
+  const offset = 364 - (score/100)*364;
+  const rc = score>=70?'var(--green)':score>=45?'var(--amber)':'var(--red)';
+  const ring = document.getElementById('ringArc');
+  ring.style.stroke = rc;
+  setTimeout(()=>{ ring.style.strokeDashoffset=offset; },100);
+  document.getElementById('ringNum').textContent = score;
+  document.getElementById('ringNum').setAttribute('fill', rc);
+  document.getElementById('gradeLabel').textContent = 'Grade '+(r.grade||'—')+' · '+(r.grade_description||'');
+  document.getElementById('gradeMsg').textContent = r.improvement_message||'';
+  document.getElementById('badgeRow').innerHTML = (r.badges||[]).map(b=>`<span class="badge">${b}</span>`).join('');
+
+  const al = document.getElementById('altList');
+  al.innerHTML = (!r.alternatives||r.alternatives.length===0)
+    ? '<p style="color:var(--muted);font-size:14px">Great news — no major swaps needed! Your cart is already eco-friendly. 🌿</p>'
+    : r.alternatives.map(a=>`
+        <div class="alt-card">
+          <div class="alt-top"><div class="alt-name">🌱 ${a.swap}</div><span class="alt-save">Save ${a.saving_kg.toFixed(1)} kg CO₂</span></div>
+          <div class="alt-desc">Replace <strong>${a.original}</strong> — ${a.reason} (${a.saving_pct}% reduction)</div>
+        </div>`).join('');
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const el = document.getElementById('histContent');
+  if (!history.length) {
+    el.innerHTML = `<div class="empty-state"><div class="e-icon">🧾</div><h3>No scans yet</h3><p>Upload your first grocery receipt to start tracking your carbon footprint.</p><button class="btn-primary" onclick="show('upload')">Scan Your First Receipt</button></div>`;
+    return;
+  }
+  el.innerHTML = '<div class="hist-grid">' + history.map(r => {
+    const g = r.grade||'?';
+    const gc = ['A','A+','A-'].includes(g)?'g-a':['B','B+','B-'].includes(g)?'g-b':'g-c';
+    const cc = r.total_co2>30?'var(--red)':r.total_co2>15?'var(--amber)':'var(--green)';
+    const d = new Date(r.scanned_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    return `<div class="hist-card" onclick="loadHist(${r.id})">
+      <div class="hist-date">${d}</div>
+      <div class="hist-store">${r.store||'Unknown Store'}</div>
+      <div class="hist-items">${r.items?.length||0} items scanned</div>
+      <div class="hist-footer">
+        <div class="hist-co2" style="color:${cc}">${r.total_co2.toFixed(1)} kg CO₂</div>
+        <span class="grade-chip ${gc}">${g}</span>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function loadHist(id) {
+  const r = history.find(h=>h.id===id);
+  if (r) { renderDashboard(r); show('dashboard'); }
+}
+</script>
+</body>
+</html>
